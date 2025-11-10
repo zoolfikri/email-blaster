@@ -1,11 +1,11 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { sendBulkEmails, type EmailRecipient } from '@/lib/sendgrid';
+import { sendBulkEmails, type EmailRecipient, type CalendarEvent } from '@/lib/sendgrid';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { recipients, subject, content } = body;
+    const { recipients, subject, content, calendarEvent } = body;
 
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
       return NextResponse.json(
@@ -34,11 +34,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await sendBulkEmails(validRecipients, subject, content);
+    // Parse calendar event if provided
+    let parsedCalendarEvent: CalendarEvent | undefined;
+    if (calendarEvent) {
+      parsedCalendarEvent = {
+        ...calendarEvent,
+        startDate: new Date(calendarEvent.startDate),
+        endDate: new Date(calendarEvent.endDate),
+      };
+    }
+
+    const result = await sendBulkEmails(validRecipients, subject, content, undefined, parsedCalendarEvent);
 
     return NextResponse.json({
       success: true,
-      message: `Successfully sent ${result.count} emails`,
+      message: `Successfully sent ${result.count} emails${parsedCalendarEvent ? ' with calendar invitations' : ''}`,
       count: result.count,
     });
   } catch (error) {

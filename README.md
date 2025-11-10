@@ -5,11 +5,14 @@ A simple email blasting application built with Next.js and SendGrid. Upload an E
 ## Features
 
 - 📧 Send bulk emails using SendGrid
-- 📊 Excel (.xlsx, .xls) upload for recipient lists
-- 📥 Download Excel template
+- 📊 Excel (.xlsx, .xls) upload for recipient lists with dynamic fields
+- � Calendar invitation support with RSVP tracking (.ics attachments)
+- �📥 Download Excel template
 - ✅ Email validation
 - 🎨 Modern UI with live preview
-- 🔒 Secure API key management
+- � Dynamic content personalization ({{name}}, {{company}}, etc.)
+- �🔒 Secure API key management
+- 📧 Predefined Microsoft event email template
 
 ## Setup
 
@@ -45,43 +48,81 @@ A simple email blasting application built with Next.js and SendGrid. Upload an E
 
 1. **Download Excel Template:** Click the "Download Template" button to get a sample Excel file.
 
-2. **Prepare your Excel file:** The Excel file should have two columns:
+2. **Prepare your Excel file:** The Excel file should have columns like:
    - `email` (required): The recipient's email address
    - `name` (optional): The recipient's name
+   - `company` (optional): Company name
+   - `position` (optional): Job position
+   - Add any other custom fields for personalization
 
    Example:
-   | email | name |
-   |-------|------|
-   | john@example.com | John Doe |
-   | jane@example.com | Jane Smith |
+   | email | name | company | position |
+   |-------|------|---------|----------|
+   | john@example.com | John Doe | Acme Corp | Manager |
+   | jane@example.com | Jane Smith | Tech Inc | Director |
 
 3. **Upload Excel:** Click "Upload Recipients (Excel)" and select your Excel file (.xlsx or .xls).
 
 4. **Compose Email:**
-   - Click "Load Microsoft Event Template" for a pre-formatted email, or
-   - Enter the email subject manually
-   - Write your email content (HTML is supported)
+   - Click "Load Microsoft Event Template" for a pre-formatted email with calendar invitation, or
+   - Enter the email subject manually (use {{name}}, {{company}}, etc. for personalization)
+   - Write your email content (HTML is supported, dynamic variables work here too)
 
-5. **Preview:** View your email in the live preview panel before sending.
+5. **Calendar Invitation (Optional):**
+   - Check "Include Calendar Invitation" to attach .ics file
+   - Fill in event details: title, description, location, start/end times
+   - Recipients can add to their calendar and RSVP
+   - See [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) for details
 
-6. **Send:** Click the send button to send emails to all recipients.
+6. **Preview:** View your email in the live preview panel before sending.
+
+7. **Send:** Click the send button to send personalized emails (with optional calendar invites) to all recipients.
+
+## Dynamic Content & Personalization
+
+Use `{{variableName}}` syntax in your subject and email content to personalize emails:
+
+```
+Subject: Hi {{name}}, Invitation from {{company}}
+
+Content: Dear {{name}},
+
+We're excited to invite you as {{position}} at {{company}}...
+```
+
+See [DYNAMIC_CONTENT_GUIDE.md](./DYNAMIC_CONTENT_GUIDE.md) for complete documentation.
+
+## Calendar Invitations & RSVP Tracking
+
+Send calendar invitations (.ics files) with your emails:
+- Recipients can add events to their calendar
+- Track who accepts/declines via RSVP responses
+- Automatic email notifications when recipients respond
+- Works with Outlook, Google Calendar, Apple Calendar, etc.
+
+See [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) for complete documentation.
 
 ## Excel Template Format
 
 The downloaded template will be a `.xlsx` file with the following structure:
 
-| email | name |
-|-------|------|
-| example1@example.com | John Doe |
-| example2@example.com | Jane Smith |
+| email | name | company | position |
+|-------|------|---------|----------|
+| john.doe@example.com | John Doe | Acme Corp | Manager |
+| jane.smith@example.com | Jane Smith | Tech Solutions | Director |
+| bob.johnson@example.com | Bob Johnson | Global Inc | VP Sales |
+
+You can add additional columns for more personalization fields. Any column can be referenced in your email using `{{columnName}}`.
 
 ## Technologies Used
 
-- **Next.js 16** - React framework
-- **SendGrid** - Email delivery service
+- **Next.js 16** - React framework with Turbopack
+- **SendGrid** - Email delivery service with personalization
 - **SheetJS (xlsx)** - Excel file parsing library
+- **ics** - Calendar invitation (.ics) file generation
 - **TypeScript** - Type safety
-- **Tailwind CSS** - Styling
+- **Tailwind CSS 4** - Styling
+- **React 19** - UI library
 
 ## Important Notes
 
@@ -89,6 +130,16 @@ The downloaded template will be a `.xlsx` file with the following structure:
 - SendGrid has sending limits based on your plan
 - Always follow email marketing best practices and regulations (CAN-SPAM, GDPR, etc.)
 - Test with a small batch of emails first
+- RSVP responses will be sent to the organizer email (SENDGRID_FROM_EMAIL)
+- For calendar invitations, ensure recipients use calendar-compatible email clients
+
+## Documentation
+
+- [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md) - Detailed setup guide
+- [TEMPLATE_FEATURE.md](./TEMPLATE_FEATURE.md) - Email template documentation
+- [DYNAMIC_CONTENT_GUIDE.md](./DYNAMIC_CONTENT_GUIDE.md) - Personalization guide
+- [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) - Calendar & RSVP tracking
+- [IMAGE_GUIDE.md](./IMAGE_GUIDE.md) - How to add images to emails
 
 ## Deploy on Vercel
 

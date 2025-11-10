@@ -78,6 +78,14 @@ export default function EmailBlaster() {
     text: string;
   } | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+  
+  // Calendar event state
+  const [includeCalendar, setIncludeCalendar] = useState(false);
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventStartDate, setEventStartDate] = useState("");
+  const [eventEndDate, setEventEndDate] = useState("");
 
   const downloadTemplate = () => {
     // Create Excel workbook with dynamic field examples
@@ -98,9 +106,23 @@ export default function EmailBlaster() {
   const loadPredefinedTemplate = () => {
     setSubject(PREDEFINED_TEMPLATE.subject);
     setContent(PREDEFINED_TEMPLATE.content);
+    
+    // Pre-populate calendar event fields
+    setIncludeCalendar(true);
+    setEventTitle("Exclusive Session with Microsoft Indonesia");
+    setEventDescription(
+      "Join us for an exclusive session in collaboration with Microsoft Indonesia. Learn best practices, gain insights, and engage in interactive discussions."
+    );
+    setEventLocation(
+      "Microsoft Indonesia Office, Jakarta Stock Exchange Building, Tower II, 18th Floor, Sudirman Central Business District"
+    );
+    // Set default date: November 12, 2025, 9 AM - 12 PM
+    setEventStartDate("2025-11-12T09:00");
+    setEventEndDate("2025-11-12T12:00");
+    
     setMessage({
       type: "success",
-      text: "Predefined template loaded successfully",
+      text: "Predefined template and calendar event loaded successfully",
     });
   };
 
@@ -162,21 +184,64 @@ export default function EmailBlaster() {
       setMessage({ type: "error", text: "Please fill in subject and content" });
       return;
     }
+    
+    // Validate calendar event fields if calendar is enabled
+    if (includeCalendar) {
+      if (!eventTitle || !eventStartDate || !eventEndDate) {
+        setMessage({
+          type: "error",
+          text: "Please fill in all required calendar event fields (title, start date, end date)",
+        });
+        return;
+      }
+      
+      if (new Date(eventStartDate) >= new Date(eventEndDate)) {
+        setMessage({
+          type: "error",
+          text: "Event end date must be after start date",
+        });
+        return;
+      }
+    }
 
     setLoading(true);
     setMessage(null);
 
     try {
+      const requestBody: {
+        recipients: EmailRecipient[];
+        subject: string;
+        content: string;
+        calendarEvent?: {
+          title: string;
+          description: string;
+          location: string;
+          startDate: string;
+          endDate: string;
+        };
+      } = {
+        recipients,
+        subject,
+        content,
+      };
+      
+      // Add calendar event if enabled
+      if (includeCalendar) {
+        requestBody.calendarEvent = {
+          title: eventTitle,
+          description: eventDescription,
+          location: eventLocation,
+          startDate: eventStartDate,
+          endDate: eventEndDate,
+        };
+      }
+
       const response = await fetch("/api/send-emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          recipients,
-          subject,
-          content,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -190,6 +255,12 @@ export default function EmailBlaster() {
         setRecipients([]);
         setSubject("");
         setContent("");
+        setIncludeCalendar(false);
+        setEventTitle("");
+        setEventDescription("");
+        setEventLocation("");
+        setEventStartDate("");
+        setEventEndDate("");
       } else {
         setMessage({
           type: "error",
@@ -331,6 +402,129 @@ export default function EmailBlaster() {
               />
             </div>
 
+            {/* Calendar Invitation Section */}
+            <div className="border border-zinc-300 rounded-lg p-4 bg-zinc-50">
+              <div className="flex items-center gap-3 mb-4">
+                <input
+                  id="include-calendar"
+                  type="checkbox"
+                  checked={includeCalendar}
+                  onChange={(e) => setIncludeCalendar(e.target.checked)}
+                  className="w-4 h-4 text-zinc-900 border-zinc-300 rounded focus:ring-zinc-900"
+                />
+                <label
+                  htmlFor="include-calendar"
+                  className="text-sm font-medium text-zinc-700"
+                >
+                  📅 Include Calendar Invitation (.ics file with RSVP tracking)
+                </label>
+              </div>
+
+              {includeCalendar && (
+                <div className="space-y-4 mt-4 pt-4 border-t border-zinc-300">
+                  {/* Event Title */}
+                  <div>
+                    <label
+                      htmlFor="event-title"
+                      className="block text-sm font-medium mb-2 text-zinc-700"
+                    >
+                      Event Title *
+                    </label>
+                    <input
+                      id="event-title"
+                      type="text"
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      placeholder="e.g., Exclusive Session with Microsoft Indonesia"
+                      className="w-full px-4 py-2 border border-zinc-300 rounded-lg bg-white text-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                      required={includeCalendar}
+                    />
+                  </div>
+
+                  {/* Event Description */}
+                  <div>
+                    <label
+                      htmlFor="event-description"
+                      className="block text-sm font-medium mb-2 text-zinc-700"
+                    >
+                      Event Description
+                    </label>
+                    <textarea
+                      id="event-description"
+                      value={eventDescription}
+                      onChange={(e) => setEventDescription(e.target.value)}
+                      placeholder="Brief description of the event"
+                      rows={3}
+                      className="w-full px-4 py-2 border border-zinc-300 rounded-lg bg-white text-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Event Location */}
+                  <div>
+                    <label
+                      htmlFor="event-location"
+                      className="block text-sm font-medium mb-2 text-zinc-700"
+                    >
+                      Event Location
+                    </label>
+                    <input
+                      id="event-location"
+                      type="text"
+                      value={eventLocation}
+                      onChange={(e) => setEventLocation(e.target.value)}
+                      placeholder="e.g., Microsoft Indonesia Office, Jakarta"
+                      className="w-full px-4 py-2 border border-zinc-300 rounded-lg bg-white text-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Event Start Date */}
+                  <div>
+                    <label
+                      htmlFor="event-start"
+                      className="block text-sm font-medium mb-2 text-zinc-700"
+                    >
+                      Start Date & Time *
+                    </label>
+                    <input
+                      id="event-start"
+                      type="datetime-local"
+                      value={eventStartDate}
+                      onChange={(e) => setEventStartDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-zinc-300 rounded-lg bg-white text-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                      required={includeCalendar}
+                    />
+                  </div>
+
+                  {/* Event End Date */}
+                  <div>
+                    <label
+                      htmlFor="event-end"
+                      className="block text-sm font-medium mb-2 text-zinc-700"
+                    >
+                      End Date & Time *
+                    </label>
+                    <input
+                      id="event-end"
+                      type="datetime-local"
+                      value={eventEndDate}
+                      onChange={(e) => setEventEndDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-zinc-300 rounded-lg bg-white text-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                      required={includeCalendar}
+                    />
+                  </div>
+
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      📧 <strong>RSVP Tracking:</strong> Recipients will receive
+                      a calendar invitation (.ics file) that they can add to
+                      their calendar. When they accept or decline, you'll receive
+                      a notification at the organizer email address.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
@@ -339,7 +533,9 @@ export default function EmailBlaster() {
             >
               {loading
                 ? "Sending..."
-                : `Send to ${recipients.length} Recipient(s)`}
+                : includeCalendar
+                  ? `Send Email + Calendar Invite to ${recipients.length} Recipient(s)`
+                  : `Send to ${recipients.length} Recipient(s)`}
             </button>
           </form>
 

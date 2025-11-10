@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { createEvent, type EventAttributes } from 'ics';
 
 if (!process.env.SENDGRID_API_KEY) {
   throw new Error('SENDGRID_API_KEY is not set');
@@ -12,11 +13,75 @@ export interface EmailRecipient {
   [key: string]: string | undefined; // Allow additional dynamic fields
 }
 
+export interface CalendarEvent {
+  title: string;
+  description: string;
+  location: string;
+  startDate: Date;
+  endDate: Date;
+  organizerEmail: string;
+  organizerName?: string;
+}
+
+function createCalendarInvitation(event: CalendarEvent, recipientEmail: string): string | null {
+  const startArray: [number, number, number, number, number] = [
+    event.startDate.getFullYear(),
+    event.startDate.getMonth() + 1,
+    event.startDate.getDate(),
+    event.startDate.getHours(),
+    event.startDate.getMinutes(),
+  ];
+
+  const endArray: [number, number, number, number, number] = [
+    event.endDate.getFullYear(),
+    event.endDate.getMonth() + 1,
+    event.endDate.getDate(),
+    event.endDate.getHours(),
+    event.endDate.getMinutes(),
+  ];
+
+  const eventAttributes: EventAttributes = {
+    start: startArray,
+    end: endArray,
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    status: 'CONFIRMED',
+    busyStatus: 'BUSY',
+    organizer: {
+      name: event.organizerName || 'Event Organizer',
+      email: event.organizerEmail,
+    },
+    attendees: [
+      {
+        name: recipientEmail.split('@')[0],
+        email: recipientEmail,
+        rsvp: true,
+        partstat: 'NEEDS-ACTION',
+        role: 'REQ-PARTICIPANT',
+      },
+    ],
+  };
+
+  try {
+    const { error, value } = createEvent(eventAttributes);
+    if (error) {
+      console.error('Error creating calendar event:', error);
+      return null;
+    }
+    return value || null;
+  } catch (error) {
+    console.error('Error creating calendar event:', error);
+    return null;
+  }
+}
+
 export async function sendBulkEmails(
   recipients: EmailRecipient[],
   subject: string,
   content: string,
-  fromEmail?: string
+  fromEmail?: string,
+  calendarEvent?: CalendarEvent
 ) {
   const from = fromEmail || process.env.SENDGRID_FROM_EMAIL;
   
@@ -38,12 +103,42 @@ export async function sendBulkEmails(
       personalizedContent = personalizedContent.replace(regex, value);
     });
     
-    return {
+    interface MessageWithAttachment {
+      to: string;
+      from: string;
+      subject: string;
+      html: string;
+      attachments?: Array<{
+        content: string;
+        filename: string;
+        type: string;
+        disposition: string;
+      }>;
+    }
+
+    const message: MessageWithAttachment = {
       to: recipient.email,
       from,
       subject: personalizedSubject,
       html: personalizedContent,
     };
+
+    // Add calendar invitation if provided
+    if (calendarEvent) {
+      const icsContent = createCalendarInvitation(calendarEvent, recipient.email);
+      if (icsContent) {
+        message.attachments = [
+          {
+            content: Buffer.from(icsContent).toString('base64'),
+            filename: 'invite.ics',
+            type: 'text/calendar',
+            disposition: 'attachment',
+          },
+        ];
+      }
+    }
+    
+    return message;
   });
 
   try {
