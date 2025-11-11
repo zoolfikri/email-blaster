@@ -24,6 +24,8 @@ export interface CalendarEvent {
 }
 
 function createCalendarInvitation(event: CalendarEvent, recipientEmail: string): string | null {
+  // Convert dates to GMT+7 (Asia/Jakarta timezone)
+  // The dates come in as local time, we need to ensure they're interpreted as GMT+7
   const startArray: [number, number, number, number, number] = [
     event.startDate.getFullYear(),
     event.startDate.getMonth() + 1,
@@ -42,7 +44,11 @@ function createCalendarInvitation(event: CalendarEvent, recipientEmail: string):
 
   const eventAttributes: EventAttributes = {
     start: startArray,
+    startInputType: 'local',
+    startOutputType: 'local',
     end: endArray,
+    endInputType: 'local',
+    endOutputType: 'local',
     title: event.title,
     description: event.description,
     location: event.location,
@@ -69,7 +75,47 @@ function createCalendarInvitation(event: CalendarEvent, recipientEmail: string):
       console.error('Error creating calendar event:', error);
       return null;
     }
-    return value || null;
+    
+    // Add timezone information to the ICS content
+    if (value) {
+      // Insert VTIMEZONE component for Asia/Jakarta (GMT+7)
+      const timezoneData = `BEGIN:VTIMEZONE
+TZID:Asia/Jakarta
+BEGIN:STANDARD
+DTSTART:19700101T000000
+TZOFFSETFROM:+0700
+TZOFFSETTO:+0700
+TZNAME:WIB
+END:STANDARD
+END:VTIMEZONE`;
+      
+      // Insert timezone after VCALENDAR line and add TZID to DTSTART/DTEND
+      const lines = value.split('\n');
+      const modifiedLines = [];
+      
+      for (let i = 0; i < lines.length; i++) {
+        modifiedLines.push(lines[i]);
+        
+        // Add timezone definition after BEGIN:VCALENDAR
+        if (lines[i].includes('BEGIN:VCALENDAR')) {
+          modifiedLines.push(timezoneData);
+        }
+        
+        // Add TZID parameter to DTSTART and DTEND
+        if (lines[i].startsWith('DTSTART:')) {
+          const dateValue = lines[i].split(':')[1];
+          modifiedLines[modifiedLines.length - 1] = `DTSTART;TZID=Asia/Jakarta:${dateValue}`;
+        }
+        if (lines[i].startsWith('DTEND:')) {
+          const dateValue = lines[i].split(':')[1];
+          modifiedLines[modifiedLines.length - 1] = `DTEND;TZID=Asia/Jakarta:${dateValue}`;
+        }
+      }
+      
+      return modifiedLines.join('\n');
+    }
+    
+    return null;
   } catch (error) {
     console.error('Error creating calendar event:', error);
     return null;
