@@ -5,13 +5,15 @@ import * as XLSX from "xlsx";
 
 interface EmailRecipient {
   email: string;
-  name?: string;
+  [key: string]: string | undefined; // Allow dynamic fields like name, company, position, etc.
 }
 
-const PREDEFINED_TEMPLATE = {
-  subject:
-    "Hi {{name}}, Invitation to Exclusive Session with Microsoft Indonesia",
-  content: `<div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; color: #333;">
+const TEMPLATES = {
+  invitation: {
+    name: "Event Invitation",
+    subject:
+      "Hi {{name}}, Invitation to Exclusive Session with Microsoft Indonesia",
+    content: `<div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; color: #333;">
   <!-- Header Image -->
   <div style="text-align: center; margin-bottom: 20px;">
     <img src="http://cdn.mcauto-images-production.sendgrid.net/b7f3d092803738d5/d2820a2a-0695-4002-9451-c954f6725229/619x206.png" alt="Header" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
@@ -30,7 +32,7 @@ const PREDEFINED_TEMPLATE = {
     </tr>
     <tr>
       <td style="padding: 10px 0;"><strong>🕘 Time:</strong></td>
-      <td style="padding: 10px 0;">9 am – 12 pm</td>
+      <td style="padding: 10px 0;">9:00 AM – 12:00 PM</td>
     </tr>
     <tr>
       <td style="padding: 10px 0; vertical-align: top;"><strong>📍 Location:</strong></td>
@@ -66,6 +68,69 @@ const PREDEFINED_TEMPLATE = {
     <img src="http://cdn.mcauto-images-production.sendgrid.net/b7f3d092803738d5/2bbdffad-4632-405a-92da-32b2b916e0ae/620x206.png" alt="Footer" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
   </div>
 </div>`,
+  },
+  reminder: {
+    name: "Event Reminder (Tomorrow)",
+    subject:
+      "Reminder: Your Exclusive Session with Microsoft Indonesia is TOMORROW!",
+    content: `<div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; color: #333;">
+  <!-- Header Image -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <img src="http://cdn.mcauto-images-production.sendgrid.net/b7f3d092803738d5/d2820a2a-0695-4002-9451-c954f6725229/619x206.png" alt="Header" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+  </div>
+  
+  <p>Dear {{name}},</p>
+  
+  <p>We're excited to remind you that your <strong>Exclusive Session</strong> in collaboration with <strong>Microsoft Indonesia</strong> is happening <strong style="color: #f7ca17;">TOMORROW!</strong></p>
+  
+  <p>Join us for an insightful morning filled with best practices, live demos, and discussions designed to help your organization accelerate its digital transformation journey.</p>
+  
+  <h2 style="color: #f7ca17; margin-top: 30px;">Event Details</h2>
+  
+  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+    <tr>
+      <td style="padding: 10px 0;"><strong>📅 Date:</strong></td>
+      <td style="padding: 10px 0;">Wednesday, November 12, 2025</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 0;"><strong>🕘 Time:</strong></td>
+      <td style="padding: 10px 0;">9:00 AM – 12:00 PM</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 0; vertical-align: top;"><strong>📍 Location:</strong></td>
+      <td style="padding: 10px 0;">
+        Microsoft Indonesia Office<br>
+        Jakarta Stock Exchange Building, Tower II, 18th Floor<br>
+        Sudirman Central Business District
+      </td>
+    </tr>
+  </table>
+  
+  <h2 style="color: #f7ca17; margin-top: 30px;">Agenda Highlights</h2>
+  
+  <ul style="line-height: 1.8; padding-left: 20px;">
+    <li>Learn best practices for leveraging Indonesia Central Region</li>
+    <li>Gain insights into modernizing enterprise applications and data platforms</li>
+    <li>Experience live demos from industry experts</li>
+    <li>Engage in interactive discussions and networking with peers and Microsoft partners</li>
+  </ul>
+  
+  <p style="margin-top: 30px;">We look forward to welcoming you in person and sharing valuable takeaways to support your business growth.</p>
+  
+  <p style="margin-top: 30px;">Contact us if you have any questions or need more information.</p>
+  
+  <p style="margin-top: 20px;">
+    <strong>Sincerely,</strong><br>
+    Ishak Papilaya | 0853-1237-3792<br>
+    <a href="mailto:ishak@nawatech.co" style="color: #f7ca17; text-decoration: none;">ishak@nawatech.co</a>
+  </p>
+  
+  <!-- Closing Image -->
+  <div style="text-align: center; margin-top: 30px;">
+    <img src="http://cdn.mcauto-images-production.sendgrid.net/b7f3d092803738d5/2bbdffad-4632-405a-92da-32b2b916e0ae/620x206.png" alt="Footer" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+  </div>
+</div>`,
+  },
 };
 
 export default function EmailBlaster() {
@@ -78,7 +143,7 @@ export default function EmailBlaster() {
     text: string;
   } | null>(null);
   const [showPreview, setShowPreview] = useState(true);
-  
+
   // Calendar event state
   const [includeCalendar, setIncludeCalendar] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
@@ -103,26 +168,27 @@ export default function EmailBlaster() {
     XLSX.writeFile(wb, "email-template.xlsx");
   };
 
-  const loadPredefinedTemplate = () => {
-    setSubject(PREDEFINED_TEMPLATE.subject);
-    setContent(PREDEFINED_TEMPLATE.content);
-    
+  const loadPredefinedTemplate = (templateKey: "invitation" | "reminder") => {
+    const template = TEMPLATES[templateKey];
+    setSubject(template.subject);
+    setContent(template.content);
+
     // Pre-populate calendar event fields
     setIncludeCalendar(true);
     setEventTitle("Exclusive Session with Microsoft Indonesia");
     setEventDescription(
-      "Join us for an exclusive session in collaboration with Microsoft Indonesia. Learn best practices, gain insights, and engage in interactive discussions."
+      "Join us for an exclusive session in collaboration with Microsoft Indonesia. Learn best practices, gain insights, and engage in interactive discussions.",
     );
     setEventLocation(
-      "Microsoft Indonesia Office, Jakarta Stock Exchange Building, Tower II, 18th Floor, Sudirman Central Business District"
+      "Microsoft Indonesia Office, Jakarta Stock Exchange Building, Tower II, 18th Floor, Sudirman Central Business District",
     );
     // Set default date: November 12, 2025, 9 AM - 12 PM
     setEventStartDate("2025-11-12T09:00");
     setEventEndDate("2025-11-12T12:00");
-    
+
     setMessage({
       type: "success",
-      text: "Predefined template and calendar event loaded successfully",
+      text: `${template.name} loaded successfully`,
     });
   };
 
@@ -148,10 +214,21 @@ export default function EmailBlaster() {
 
         const parsedRecipients: EmailRecipient[] = jsonData
           .filter((row) => row.email && row.email.trim() !== "")
-          .map((row) => ({
-            email: row.email.trim(),
-            name: row.name?.trim() || undefined,
-          }));
+          .map((row) => {
+            // Capture all fields from the Excel row
+            const recipient: EmailRecipient = {
+              email: row.email.trim(),
+            };
+
+            // Add all other columns as dynamic fields
+            Object.keys(row).forEach((key) => {
+              if (key !== "email" && row[key]) {
+                recipient[key] = row[key].trim();
+              }
+            });
+
+            return recipient;
+          });
 
         setRecipients(parsedRecipients);
         setMessage({
@@ -184,7 +261,7 @@ export default function EmailBlaster() {
       setMessage({ type: "error", text: "Please fill in subject and content" });
       return;
     }
-    
+
     // Validate calendar event fields if calendar is enabled
     if (includeCalendar) {
       if (!eventTitle || !eventStartDate || !eventEndDate) {
@@ -194,7 +271,7 @@ export default function EmailBlaster() {
         });
         return;
       }
-      
+
       if (new Date(eventStartDate) >= new Date(eventEndDate)) {
         setMessage({
           type: "error",
@@ -224,7 +301,7 @@ export default function EmailBlaster() {
         subject,
         content,
       };
-      
+
       // Add calendar event if enabled
       if (includeCalendar) {
         requestBody.calendarEvent = {
@@ -341,15 +418,24 @@ export default function EmailBlaster() {
             {/* Template Actions */}
             <div>
               <p className="block text-sm font-medium mb-2 text-zinc-700">
-                Email Template
+                Email Templates
               </p>
-              <button
-                type="button"
-                onClick={loadPredefinedTemplate}
-                className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                Load Microsoft Event Template
-              </button>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadPredefinedTemplate("invitation")}
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  📧 Load Event Invitation Template
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loadPredefinedTemplate("reminder")}
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
+                >
+                  ⏰ Load Event Reminder Template (Tomorrow)
+                </button>
+              </div>
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-800">
                   💡 <strong>Dynamic Content Tip:</strong> Use{" "}
@@ -517,8 +603,8 @@ export default function EmailBlaster() {
                     <p className="text-xs text-blue-800">
                       📧 <strong>RSVP Tracking:</strong> Recipients will receive
                       a calendar invitation (.ics file) that they can add to
-                      their calendar. When they accept or decline, you'll receive
-                      a notification at the organizer email address.
+                      their calendar. When they accept or decline, you'll
+                      receive a notification at the organizer email address.
                     </p>
                   </div>
                 </div>

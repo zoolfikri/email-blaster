@@ -6,13 +6,14 @@ A simple email blasting application built with Next.js and SendGrid. Upload an E
 
 - 📧 Send bulk emails using SendGrid
 - 📊 Excel (.xlsx, .xls) upload for recipient lists with dynamic fields
-- � Calendar invitation support with RSVP tracking (.ics attachments)
-- �📥 Download Excel template
+- 📅 **Integrated RSVP tracking** - Recipients respond with one click in their email client
+- 📬 Calendar invitation support (.ics attachments) with automatic response tracking
+- � Download Excel template
 - ✅ Email validation
 - 🎨 Modern UI with live preview
-- � Dynamic content personalization ({{name}}, {{company}}, etc.)
-- �🔒 Secure API key management
-- 📧 Predefined Microsoft event email template
+- 🔄 Dynamic content personalization ({{name}}, {{company}}, etc.)
+- 🔒 Secure API key management
+- 📧 Predefined Microsoft event email template with RSVP instructions
 
 ## Setup
 
@@ -94,13 +95,16 @@ See [DYNAMIC_CONTENT_GUIDE.md](./DYNAMIC_CONTENT_GUIDE.md) for complete document
 
 ## Calendar Invitations & RSVP Tracking
 
-Send calendar invitations (.ics files) with your emails:
-- Recipients can add events to their calendar
-- Track who accepts/declines via RSVP responses
-- Automatic email notifications when recipients respond
-- Works with Outlook, Google Calendar, Apple Calendar, etc.
+Send calendar invitations (.ics files) with **integrated RSVP tracking**:
+- Recipients see Accept/Decline/Tentative buttons directly in their email (Outlook, Gmail, Apple Mail)
+- **One-click response** - no manual email replies needed
+- Automatic tracking in your calendar application
+- You receive instant notifications when people respond
+- Works seamlessly with Outlook, Google Calendar, Apple Calendar, and more
 
-See [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) for complete documentation.
+**Example:** When you send an invitation, recipients in Outlook see Accept/Tentative/Decline buttons at the top of the email. One click adds the event to their calendar AND sends you their response automatically.
+
+See [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) for complete documentation with visual guides.
 
 ## Excel Template Format
 
@@ -138,7 +142,7 @@ You can add additional columns for more personalization fields. Any column can b
 - [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md) - Detailed setup guide
 - [TEMPLATE_FEATURE.md](./TEMPLATE_FEATURE.md) - Email template documentation
 - [DYNAMIC_CONTENT_GUIDE.md](./DYNAMIC_CONTENT_GUIDE.md) - Personalization guide
-- [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) - Calendar & RSVP tracking
+- [CALENDAR_INVITATION_GUIDE.md](./CALENDAR_INVITATION_GUIDE.md) - **Integrated RSVP tracking** (Recommended!)
 - [IMAGE_GUIDE.md](./IMAGE_GUIDE.md) - How to add images to emails
 
 ## Deploy on Vercel

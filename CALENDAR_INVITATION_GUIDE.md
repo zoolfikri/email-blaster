@@ -1,10 +1,42 @@
-# Calendar Invitation & RSVP Tracking Guide
+# Calendar Invitation & Integrated RSVP Tracking Guide
 
 ## Overview
 
-The Email Blaster now supports sending calendar invitations (.ics files) as email attachments. Recipients can add the event to their calendar and respond with Accept/Decline, allowing you to track RSVPs automatically.
+The Email Blaster includes **integrated RSVP functionality** through calendar invitations (.ics files). Recipients can respond directly within their email client (Outlook, Gmail, Apple Mail) without any manual steps. Their responses automatically notify you.
 
-## How It Works
+## How Integrated RSVP Works
+
+### For Recipients
+
+When recipients receive your email with a calendar invitation:
+
+**In Microsoft Outlook:**
+1. Email displays Accept/Tentative/Decline buttons at the top
+2. Click their choice (one click!)
+3. Event is added to their calendar automatically
+4. Their response is sent to you automatically
+
+**In Gmail:**
+1. Event details appear with Yes/No/Maybe buttons
+2. Click their response (one click!)
+3. Event is added to Google Calendar
+4. You receive their response notification
+
+**In Apple Mail:**
+1. Email shows the .ics attachment
+2. Click to open in Calendar app
+3. Choose Accept/Decline/Maybe
+4. Response is sent automatically
+
+### For You (Organizer)
+
+When a recipient responds, you receive:
+- **Automatic email notification** with their response
+- **Subject:** "Accepted: [Event Name]" or "Declined: [Event Name]"
+- **From:** The recipient's email
+- **Content:** Their response status
+
+**No manual tracking needed!** Your calendar application (Outlook/Google Calendar) automatically tracks responses.
 
 ### 1. Enable Calendar Invitations
 
@@ -50,50 +82,224 @@ When you click "Send Email + Calendar Invite to X Recipient(s)", the system will
 
 ## RSVP Tracking
 
-### How Recipients Respond
+### Automatic Response Collection
 
-When recipients receive the email:
+When recipients respond via their email client, their calendar application automatically:
+1. Sends a standardized RSVP email to you
+2. Updates the event's attendee status
+3. Provides a clear subject line indicating their response
 
-1. They'll see an attachment: `invite.ics`
-2. They can click/open it to add to their calendar (Outlook, Google Calendar, Apple Calendar, etc.)
-3. In their calendar app, they'll see options to:
-   - ✅ **Accept** - Confirms attendance
-   - ❌ **Decline** - Will not attend
-   - ❓ **Tentative** - Maybe attending
+### Response Email Format
 
-### How You Track Responses
-
-When a recipient responds (Accept/Decline/Tentative), their calendar application will automatically send an email response to the **organizer email address** (the one configured in your `.env.local` as `SENDGRID_FROM_EMAIL`).
-
-**Example Response Email:**
+**When someone accepts:**
 ```
 From: john.doe@example.com
 To: no-reply@nawatech.co
 Subject: Accepted: Exclusive Session with Microsoft Indonesia
 
 John Doe has accepted this invitation.
+Event: Exclusive Session with Microsoft Indonesia
+When: November 12, 2025, 9:00 AM - 12:00 PM
 ```
 
-**Tracking Options:**
+**When someone declines:**
+```
+From: jane.smith@example.com
+To: no-reply@nawatech.co
+Subject: Declined: Exclusive Session with Microsoft Indonesia
 
-1. **Manual Tracking**
+Jane Smith has declined this invitation.
+```
+
+**When someone is tentative:**
+```
+From: bob.johnson@example.com
+To: no-reply@nawatech.co
+Subject: Tentative: Exclusive Session with Microsoft Indonesia
+
+Bob Johnson has tentatively accepted this invitation.
+```
+
+### Tracking Options
+
+**1. Email Inbox (Simple)**
    - Check your organizer email inbox
-   - Look for emails with subjects like:
-     - "Accepted: [Event Title]"
-     - "Declined: [Event Title]"
-     - "Tentative: [Event Title]"
+   - Look for subjects: "Accepted:", "Declined:", "Tentative:"
+   - Responses are automatically formatted and easy to identify
 
-2. **Email Filters** (Recommended)
-   - Set up email filters/rules in your inbox
-   - Create labels/folders for: Accepted, Declined, Tentative
-   - Automatically organize responses for easy tracking
+**2. Email Filters (Recommended)**
+   Create automatic filters to organize responses:
 
-3. **External Tools**
-   - Use email management tools
-   - Export to spreadsheet for analysis
-   - Consider calendar management platforms for larger events
+   **Gmail:**
+   - Filter: Subject contains "Accepted:"
+   - Label: Events/Accepted
+   - Filter: Subject contains "Declined:"
+   - Label: Events/Declined
+   - Filter: Subject contains "Tentative:"
+   - Label: Events/Tentative
 
-## Technical Details
+   **Outlook:**
+   - Rule: Subject contains "Accepted:"
+   - Move to: Event Responses/Confirmed
+   - Rule: Subject contains "Declined:"
+   - Move to: Event Responses/Declined
+   - Rule: Subject contains "Tentative:"
+   - Move to: Event Responses/Maybe
+
+**3. Calendar Application (Automatic)**
+   Most calendar apps automatically track responses:
+
+   **Microsoft Outlook:**
+   - Open the event in your calendar
+   - Click "Tracking" tab
+   - See list of all attendees and their responses
+   - Real-time updates as people respond
+
+   **Google Calendar:**
+   - Open the event
+   - Click on event details
+   - See "Guests" section with response counts
+   - View who accepted/declined/didn't respond
+
+   **Apple Calendar:**
+   - Open the event
+   - View attendees list with status icons
+   - ✓ = Accepted, ✗ = Declined, ? = Tentative
+
+**4. Reporting & Analytics**
+   Export data for analysis:
+   - Outlook: Export tracking data to Excel
+   - Google Calendar: Use Google Workspace reports
+   - Third-party tools: Zapier, Microsoft Power Automate
+
+## How Recipients See and Respond to Invitations
+
+### Microsoft Outlook (Desktop & Web)
+
+**What Recipients See:**
+```
+┌─────────────────────────────────────────────────┐
+│ [Accept ▼] [Tentative ▼] [Decline ▼]          │
+│                                                 │
+│ From: no-reply@nawatech.co                     │
+│ Subject: Hi John, Invitation to Exclusive...   │
+│                                                 │
+│ 📅 Exclusive Session with Microsoft Indonesia  │
+│ 📍 Microsoft Indonesia Office, Jakarta         │
+│ 🕐 Wed, Nov 12, 2025 • 9:00 AM - 12:00 PM    │
+│                                                 │
+│ [Email body content appears below]             │
+└─────────────────────────────────────────────────┘
+```
+
+**How They Respond:**
+1. Click **Accept**, **Tentative**, or **Decline** button at the top
+2. Choose whether to send response now or edit it
+3. Event is automatically added to their Outlook calendar
+4. You receive their response immediately
+
+---
+
+### Gmail / Google Workspace
+
+**What Recipients See:**
+```
+┌─────────────────────────────────────────────────┐
+│ From: no-reply@nawatech.co                     │
+│ Subject: Hi Jane, Invitation to Exclusive...   │
+│                                                 │
+│ ┌─────────────────────────────────────────┐   │
+│ │ 📅 Exclusive Session with Microsoft...   │   │
+│ │ Wed, Nov 12 • 9:00 AM - 12:00 PM        │   │
+│ │ Microsoft Indonesia Office               │   │
+│ │                                           │   │
+│ │ Going?  [Yes] [No] [Maybe]               │   │
+│ │ [Add to Calendar]                        │   │
+│ └─────────────────────────────────────────┘   │
+│                                                 │
+│ [Email body content appears below]             │
+└─────────────────────────────────────────────────┘
+```
+
+**How They Respond:**
+1. Click **Yes**, **No**, or **Maybe** in the event card
+2. Event is automatically added to Google Calendar
+3. You receive their RSVP response
+4. They can also click "Add to Calendar" for more options
+
+---
+
+### Apple Mail / iOS Mail
+
+**What Recipients See:**
+```
+┌─────────────────────────────────────────────────┐
+│ From: no-reply@nawatech.co                     │
+│ Subject: Hi Bob, Invitation to Exclusive...    │
+│                                                 │
+│ 📎 invite.ics                                  │
+│                                                 │
+│ [Email body content]                           │
+│                                                 │
+│ [Tap attachment to view in Calendar]          │
+└─────────────────────────────────────────────────┘
+```
+
+**How They Respond:**
+1. Tap the **invite.ics** attachment
+2. iOS Calendar app opens with event details
+3. Choose **Accept**, **Maybe**, or **Decline**
+4. Event is added to their Apple Calendar
+5. Response is sent to you automatically
+
+---
+
+### Automatic Response Flow
+
+```
+┌─────────────┐
+│  Recipient  │ Receives email with calendar invitation
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────────────┐
+│  Email Client Shows RSVP Options            │
+│  • Outlook: Accept/Tentative/Decline        │
+│  • Gmail: Yes/No/Maybe                      │
+│  • Apple: Accept/Maybe/Decline              │
+└──────┬──────────────────────────────────────┘
+       │
+       ▼
+┌─────────────┐
+│  One Click  │ Recipient chooses their response
+└──────┬──────┘
+       │
+       ├──────────────────┬──────────────────┐
+       │                  │                  │
+       ▼                  ▼                  ▼
+┌─────────────┐  ┌──────────────┐  ┌────────────┐
+│ Accepted    │  │  Tentative   │  │  Declined  │
+└──────┬──────┘  └──────┬───────┘  └─────┬──────┘
+       │                │                 │
+       └────────────────┴─────────────────┘
+                        │
+                        ▼
+       ┌────────────────────────────────┐
+       │  Calendar App Automatically:   │
+       │  1. Adds event to calendar     │
+       │  2. Sends RSVP to organizer    │
+       │  3. Sets up reminders          │
+       └────────────────┬───────────────┘
+                        │
+                        ▼
+              ┌──────────────────┐
+              │  You Receive:    │
+              │  • Email notice  │
+              │  • Status update │
+              └──────────────────┘
+```
+
+## Viewing RSVP Responses in Calendar Apps
 
 ### ICS File Format
 
